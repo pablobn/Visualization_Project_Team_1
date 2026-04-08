@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IoT Dashboard - Agriculture & Composting</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="container page-shell">
+    <div class="page-stack">
+      <nav class="navbar">
+        <a href="home.html" class="navbar-brand">
+          <span class="brand-mark">🌿</span>
+          <span class="brand-copy">
+            <span class="brand-title">Campus Composting</span>
+            <span class="brand-subtitle">Monitoring System</span>
+          </span>
+        </a>
+        <div class="navbar-links">
+          <a href="home.html">Home</a>
+          <a href="dashboard.html" class="active">Dashboard</a>
+          <a href="team.html">Team</a>
+        </div>
+      </nav>
+
+      <header class="header">
+        <div class="title-wrap">
+          <p class="eyebrow">Campus Composting</p>
+          <h1>IoT Dashboard</h1>
+          <p>
+            Monitoring Breeding Trials, Shelter, Compounds, and Outdoor data
+            in a unified interface designed to match the rest of the project.
+          </p>
+        </div>
+
+        <div class="chips" aria-label="Dashboard features">
+          <span class="chip">Simple</span>
+          <span class="chip">Responsive</span>
+          <span class="chip">Dark UI</span>
+          <span class="chip">Color status</span>
+        </div>
+      </header>
+
+      <main class="dashboard-layout">
+        <section class="section">
+          <div class="section-header">
+            <div>
+              <h2>Breeding Trials</h2>
+              <p>Compact sensor grid with current readings.</p>
+            </div>
+          </div>
+          <div class="sensor-grid sensor-grid--compact" id="breeding-grid"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <div>
+              <h2>Shelter</h2>
+              <p>Current canopy readings.</p>
+            </div>
+          </div>
+          <div class="simple-grid" id="shelter-grid"></div>
+        </section>
+
+        <section class="section section-wide">
+          <div class="section-header">
+            <div>
+              <h2>Compounds</h2>
+              <p>Simplified compost bin view by vertical zone.</p>
+            </div>
+          </div>
+          <div class="two-col" id="compounds-grid"></div>
+          <div class="legend" aria-label="Status legend">
+            <span><i class="dot blue"></i>Low value</span>
+            <span><i class="dot green"></i>Normal value</span>
+            <span><i class="dot red"></i>High value</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <div>
+              <h2>Outdoor</h2>
+              <p>External environmental conditions.</p>
+            </div>
+          </div>
+          <div class="simple-grid" id="outdoor-grid"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>© 2026 Campus Composting Project • R54D25S<br />Exhibition: April 23, 2026</p>
+      </footer>
+    </div>
+  </div>
+
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

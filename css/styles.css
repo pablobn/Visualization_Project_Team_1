@@ -945,6 +945,7 @@ p {
    ========================================================================== */
 .analysis-section {
   padding: 20px;
+  overflow: visible;
 }
 
 .analysis-header {
@@ -954,6 +955,15 @@ p {
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 18px;
+  position: sticky;
+  top: 92px;
+  z-index: 24;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: rgba(11, 19, 38, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(12px);
 }
 
 .analysis-header h2 {
@@ -971,10 +981,10 @@ p {
 .compound-toggle {
   display: inline-flex;
   gap: 4px;
-  padding: 4px;
+  padding: 3px;
   background: var(--panel-soft);
   border: 1px solid var(--border-soft);
-  border-radius: 999px;
+  border-radius: 14px;
 }
 
 .compound-btn {
@@ -982,9 +992,9 @@ p {
   background: transparent;
   color: var(--muted);
   border: none;
-  border-radius: 999px;
-  padding: 8px 18px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
@@ -1063,6 +1073,8 @@ p {
 
   .analysis-header {
     align-items: flex-start;
+    top: 84px;
+    padding: 12px;
   }
 }
 
@@ -1108,6 +1120,10 @@ p {
   .chart-wrap--tall {
     height: 460px;
   }
+
+  .phase-guide {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-legend-note .legend-note-sub {
@@ -1123,51 +1139,193 @@ p {
   font-weight: 600;
 }
 
+.phase-guide {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.phase-guide-card {
+  padding: 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-soft);
+}
+
+.phase-guide-card.phase-mesophilic {
+  border-color: rgba(61, 220, 151, 0.40);
+  background: rgba(61, 220, 151, 0.08);
+}
+
+.phase-guide-card.phase-thermophilic {
+  border-color: rgba(255, 107, 107, 0.42);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.phase-guide-card.phase-cooling {
+  border-color: rgba(255, 184, 77, 0.42);
+  background: rgba(255, 184, 77, 0.08);
+}
+
+.phase-guide-card.phase-maturation {
+  border-color: rgba(109, 211, 255, 0.42);
+  background: rgba(109, 211, 255, 0.08);
+}
+
+.phase-guide-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.phase-guide-head h4 {
+  margin: 0;
+  color: var(--heading);
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.phase-guide-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.phase-guide-card p + p {
+  margin-top: 10px;
+}
+
+.phase-guide-card b {
+  color: var(--text);
+}
+
 /* ==========================================================================
-   Date range selector (Data Analysis)
+   Range picker — preset chips + dual-handle slider + readable readout
    ========================================================================== */
 .analysis-controls {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: flex-end;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.date-range {
-  display: inline-flex;
-  align-items: center;
+.range-picker {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  padding: 6px 8px;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 8px 10px;
   background: var(--panel-soft);
   border: 1px solid var(--border-soft);
-  border-radius: 10px;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-.date-field {
+/* Mode tabs (Day · Week · Month · Range) */
+.picker-modes {
   display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.picker-mode {
+  appearance: none;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 9px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.picker-mode:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.picker-mode.active {
+  color: var(--heading);
+  background: linear-gradient(135deg, rgba(77, 163, 255, 0.28), rgba(46, 204, 113, 0.22));
+  box-shadow: var(--shadow-soft);
+}
+
+/* Pane for the active mode */
+.picker-pane {
+  display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.date-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+.picker-pane[hidden] {
+  display: none !important;
 }
 
-.date-select {
+.picker-pane--range {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/* Prev/next nav arrows */
+.picker-nav {
   appearance: none;
-  -webkit-appearance: none;
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   border: 1px solid var(--border-soft);
-  border-radius: 6px;
-  padding: 6px 24px 6px 10px;
-  font-size: 13px;
+  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.picker-nav:hover {
+  border-color: var(--blue);
+  background: rgba(77, 163, 255, 0.10);
+}
+
+.picker-nav:active {
+  transform: scale(0.95);
+}
+
+.picker-nav:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Shared styling for the Day/Week/Month inputs and selects */
+.picker-input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 6px 28px 6px 10px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  /* Custom chevron */
   background-image:
     linear-gradient(45deg, transparent 50%, var(--muted) 50%),
     linear-gradient(135deg, var(--muted) 50%, transparent 50%);
@@ -1176,36 +1334,193 @@ p {
     calc(100% - 9px) 50%;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
+  transition: border-color 0.18s ease;
+  font-variant-numeric: tabular-nums;
 }
 
-.date-select:hover {
+/* Date inputs shouldn't get the chevron — the browser shows its own picker */
+.picker-input[type="date"] {
+  background-image: none;
+  padding-right: 10px;
+}
+
+.picker-input:hover {
   border-color: var(--blue);
 }
 
-.date-select:focus-visible {
+.picker-input:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 
-.date-select option {
+.picker-input option {
   background: var(--bg-2);
   color: var(--text);
+}
+
+/* Custom styling for webkit date pickers to look consistent */
+.picker-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) brightness(1.2);
+  cursor: pointer;
+}
+
+/* Preset chips */
+.range-presets {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.range-preset {
+  appearance: none;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 9px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.range-preset:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.range-preset.active {
+  color: var(--heading);
+  background: linear-gradient(135deg, rgba(77, 163, 255, 0.35), rgba(46, 204, 113, 0.25));
+  box-shadow: var(--shadow-soft);
+}
+
+/* Dual-handle range slider */
+.range-slider {
+  position: relative;
+  height: 24px;
+  padding: 0 10px;
+  margin-top: 0;
+}
+
+.range-track,
+.range-track-fill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.range-track {
+  left: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-soft);
+}
+
+.range-track-fill {
+  left: 10px;
+  right: 10px;
+  background: linear-gradient(90deg, rgba(77, 163, 255, 0.85), rgba(46, 204, 113, 0.85));
+  box-shadow: 0 0 0 1px rgba(77, 163, 255, 0.35);
+}
+
+/* Two range inputs overlaid on the same track */
+.range-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  pointer-events: none; /* the track is pass-through; only thumbs catch events */
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.range-input::-webkit-slider-runnable-track { background: transparent; height: 24px; }
+.range-input::-moz-range-track               { background: transparent; height: 24px; }
+
+.range-input::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fbff;
+  border: 2px solid #4da3ff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  margin-top: 0;
+}
+
+.range-input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fbff;
+  border: 2px solid #4da3ff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+}
+
+.range-input:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.08); border-color: #2ecc71; }
+.range-input:active::-moz-range-thumb     { cursor: grabbing; transform: scale(1.08); border-color: #2ecc71; }
+
+.range-input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Stack To slider on top of From so both handles are reachable at the extremes */
+.range-input--from { z-index: 2; }
+.range-input--to   { z-index: 3; }
+
+/* Readout */
+.range-readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  color: var(--text);
+  width: fit-content;
+  padding: 5px 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.range-readout-sep {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.range-readout-span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.02em;
 }
 
 @media (max-width: 720px) {
   .analysis-controls {
     width: 100%;
+    justify-content: stretch;
   }
 
-  .date-range {
-    flex: 1;
-    justify-content: space-between;
-  }
-
-  .date-select {
-    padding: 6px 22px 6px 8px;
-    font-size: 12px;
+  .range-picker {
+    width: 100%;
+    max-width: none;
   }
 }
 
@@ -1293,5 +1608,135 @@ p {
   .composter-head-right {
     justify-content: flex-start;
     width: 100%;
+  }
+}
+
+.correlation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.correlation-grid .chart-card {
+  padding: 14px 14px 12px;
+}
+
+.chart-wrap--mid {
+  height: 280px;
+  padding: 4px 0 0;
+  background: transparent;
+  border: none;
+  position: relative;
+}
+
+.chart-wrap--mid canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Heatmap table */
+.heatmap-wrap {
+  overflow-x: auto;
+  padding: 6px 0 2px;
+}
+
+.heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: 12px;
+}
+
+.heatmap-table th,
+.heatmap-table td {
+  padding: 10px 8px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.heatmap-colhead {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.heatmap-rowhead {
+  color: var(--heading);
+  font-weight: 600;
+  font-size: 12px;
+  text-align: right;
+  padding-right: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.heatmap-cell {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  min-width: 56px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+/* Color-scale reference bar (shared for both heatmaps) */
+.corr-scale {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.corr-scale-bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    rgb(77, 128, 235) 0%,
+    rgb(230, 228, 222) 50%,
+    rgb(220, 65, 65) 100%
+  );
+  border: 1px solid var(--border-soft);
+}
+
+.corr-scale-label--right {
+  margin-left: auto;
+}
+
+@media (max-width: 820px) {
+  .correlation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-wrap--mid {
+    height: 220px;
+  }
+}
+
+@media (max-width: 520px) {
+  .heatmap-table {
+    font-size: 11px;
+  }
+
+  .heatmap-cell {
+    min-width: 44px;
+    padding: 8px 4px;
   }
 }

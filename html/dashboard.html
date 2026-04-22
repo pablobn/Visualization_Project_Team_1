@@ -110,15 +110,57 @@
               <p id="analysis-subtitle">Showing data for Compound 1.</p>
             </div>
             <div class="analysis-controls">
-              <div class="date-range">
-                <label class="date-field">
-                  <span class="date-label">From</span>
-                  <select id="range-from" class="date-select" aria-label="From month"></select>
-                </label>
-                <label class="date-field">
-                  <span class="date-label">To</span>
-                  <select id="range-to" class="date-select" aria-label="To month"></select>
-                </label>
+              <div class="range-picker" aria-label="Date picker">
+                <div class="picker-modes" role="tablist" aria-label="Granularity">
+                  <button type="button" class="picker-mode" data-mode="day"   role="tab">Day</button>
+                  <button type="button" class="picker-mode" data-mode="week"  role="tab">Week</button>
+                  <button type="button" class="picker-mode" data-mode="month" role="tab">Month</button>
+                  <button type="button" class="picker-mode active" data-mode="range" role="tab">Range</button>
+                </div>
+
+                <!-- Day mode -->
+                <div class="picker-pane" data-pane="day" hidden>
+                  <button type="button" class="picker-nav" data-dir="-1" aria-label="Previous day">‹</button>
+                  <input type="date" id="picker-day" class="picker-input" aria-label="Pick a day" />
+                  <button type="button" class="picker-nav" data-dir="1" aria-label="Next day">›</button>
+                </div>
+
+                <!-- Week mode -->
+                <div class="picker-pane" data-pane="week" hidden>
+                  <button type="button" class="picker-nav" data-dir="-1" aria-label="Previous week">‹</button>
+                  <select id="picker-week" class="picker-input" aria-label="Pick a week"></select>
+                  <button type="button" class="picker-nav" data-dir="1" aria-label="Next week">›</button>
+                </div>
+
+                <!-- Month mode -->
+                <div class="picker-pane" data-pane="month" hidden>
+                  <button type="button" class="picker-nav" data-dir="-1" aria-label="Previous month">‹</button>
+                  <select id="picker-month" class="picker-input" aria-label="Pick a month"></select>
+                  <button type="button" class="picker-nav" data-dir="1" aria-label="Next month">›</button>
+                </div>
+
+                <!-- Range mode (default) -->
+                <div class="picker-pane picker-pane--range" data-pane="range">
+                  <div class="range-presets" role="tablist" aria-label="Quick ranges">
+                    <button type="button" class="range-preset" data-preset="1M">1M</button>
+                    <button type="button" class="range-preset" data-preset="3M">3M</button>
+                    <button type="button" class="range-preset" data-preset="6M">6M</button>
+                    <button type="button" class="range-preset active" data-preset="ALL">All</button>
+                  </div>
+                  <div class="range-slider" id="range-slider">
+                    <div class="range-track"></div>
+                    <div class="range-track-fill" id="range-track-fill"></div>
+                    <input type="range" id="range-from" class="range-input range-input--from" aria-label="From day" />
+                    <input type="range" id="range-to"   class="range-input range-input--to"   aria-label="To day" />
+                  </div>
+                </div>
+
+                <div class="range-readout" aria-live="polite">
+                  <span id="range-readout-from">—</span>
+                  <span class="range-readout-sep">→</span>
+                  <span id="range-readout-to">—</span>
+                  <span class="range-readout-span" id="range-readout-span"></span>
+                </div>
               </div>
               <div class="compound-toggle" role="tablist" aria-label="Select compound">
                 <button
@@ -146,7 +188,7 @@
           <article class="chart-card chart-card--full">
             <header class="chart-head">
               <h3>Temperature · Humidity · Heating · Outside</h3>
-              <span class="chart-sub">Monthly · May '25 → Apr '26 · per zone · 3 axes</span>
+              <span class="chart-sub">Daily · per zone · 3 axes · filtered by date range</span>
             </header>
 
             <div class="phase-legend" id="phase-legend" aria-label="Composting phases"></div>
@@ -161,7 +203,90 @@
               <span><i class="dot amber"></i>Heating (kWh · right)</span>
               <span class="legend-note-sub">Line style: <b>solid</b>=Top · <b>dashed</b>=Middle · <b>dotted</b>=Bottom · Tip: click a legend item to hide/show — selection persists across date changes.</span>
             </div>
+
+            <div class="phase-guide" aria-label="Composting phase guide">
+              <article class="phase-guide-card phase-mesophilic">
+                <div class="phase-guide-head">
+                  <span class="phase-dot"></span>
+                  <h4>Mesophilic</h4>
+                </div>
+                <p><b>What it is for:</b> The compost starts to activate and the first microorganisms break down easy organic matter.</p>
+                <p><b>What is needed:</b> Fresh material, oxygen, balanced moisture, and temperatures that begin to rise into the 20–40 °C range.</p>
+              </article>
+
+              <article class="phase-guide-card phase-thermophilic">
+                <div class="phase-guide-head">
+                  <span class="phase-dot"></span>
+                  <h4>Thermophilic</h4>
+                </div>
+                <p><b>What it is for:</b> Fast decomposition of complex material and strong pathogen reduction at peak biological activity.</p>
+                <p><b>What is needed:</b> Enough microbial activity, a nitrogen-carbon mix that fuels heating, oxygen, and sustained temperatures above 40 °C.</p>
+              </article>
+
+              <article class="phase-guide-card phase-cooling">
+                <div class="phase-guide-head">
+                  <span class="phase-dot"></span>
+                  <h4>Cooling</h4>
+                </div>
+                <p><b>What it is for:</b> The intense heat begins to drop while remaining material keeps decomposing more slowly.</p>
+                <p><b>What is needed:</b> The thermophilic peak must have already happened, then temperature gradually falls as easily degradable matter is consumed.</p>
+              </article>
+
+              <article class="phase-guide-card phase-maturation">
+                <div class="phase-guide-head">
+                  <span class="phase-dot"></span>
+                  <h4>Maturation</h4>
+                </div>
+                <p><b>What it is for:</b> Final stabilization, humus formation, and production of safer, more mature compost.</p>
+                <p><b>What is needed:</b> Stable lower temperatures, enough time, moderate moisture, and continued aeration without re-heating the pile.</p>
+              </article>
+            </div>
           </article>
+
+          <div class="correlation-grid">
+            <article class="chart-card">
+              <header class="chart-head">
+                <h3>Temperature · Layers vs Outside</h3>
+                <span class="chart-sub">Pearson · updates with selected date range</span>
+              </header>
+              <div class="heatmap-wrap" id="heatmap-temp"></div>
+            </article>
+
+            <article class="chart-card">
+              <header class="chart-head">
+                <h3>Moisture · Layers vs Outside</h3>
+                <span class="chart-sub">Pearson · updates with selected date range</span>
+              </header>
+              <div class="heatmap-wrap" id="heatmap-hum"></div>
+            </article>
+
+            <article class="chart-card">
+              <header class="chart-head">
+                <h3>Middle Layer · Temperature vs Outside</h3>
+                <span class="chart-sub">Daily · per selected range</span>
+              </header>
+              <div class="chart-wrap chart-wrap--mid">
+                <canvas id="chart-middle-temp"></canvas>
+              </div>
+            </article>
+
+            <article class="chart-card">
+              <header class="chart-head">
+                <h3>Middle Layer · Moisture vs Outside</h3>
+                <span class="chart-sub">Daily · per selected range</span>
+              </header>
+              <div class="chart-wrap chart-wrap--mid">
+                <canvas id="chart-middle-hum"></canvas>
+              </div>
+            </article>
+          </div>
+
+          <div class="corr-scale" aria-label="Correlation color scale">
+            <span class="corr-scale-label">−1</span>
+            <span class="corr-scale-bar"></span>
+            <span class="corr-scale-label">0</span>
+            <span class="corr-scale-label corr-scale-label--right">+1</span>
+          </div>
         </section>
       </main>
 
@@ -172,6 +297,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Generated by python/build_data.py — defines window.APP_DATA -->
+  <script src="../js/data.js"></script>
   <script src="../js/dashboard.js"></script>
 </body>
 </html>

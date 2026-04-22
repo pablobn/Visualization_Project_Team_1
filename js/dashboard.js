@@ -110,7 +110,7 @@ function buildPhaseSeries(temps) {
     if (recentTemps.length > 3) recentTemps.shift();
 
     const avgTemp = average(recentTemps);
-    const isHot = avgTemp >= 40;
+    const isHot = temp >= 40 || avgTemp >= 40;
     const isCoolingBand = avgTemp < 40;
     const isStableLow = avgTemp <= 25;
     const isRestartWarm = avgTemp >= 32;
@@ -118,7 +118,7 @@ function buildPhaseSeries(temps) {
     hotStreak = isHot ? hotStreak + 1 : 0;
 
     if (phase === 'mesophilic') {
-      if (avgTemp >= 45 || hotStreak >= 2) {
+      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
         phase = 'thermophilic';
         coolStreak = 0;
         stableLowStreak = 0;
@@ -131,7 +131,7 @@ function buildPhaseSeries(temps) {
         stableLowStreak = 0;
       }
     } else if (phase === 'cooling') {
-      if (avgTemp >= 45 || hotStreak >= 2) {
+      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
         phase = 'thermophilic';
         coolStreak = 0;
         stableLowStreak = 0;
@@ -144,7 +144,7 @@ function buildPhaseSeries(temps) {
       }
     } else if (phase === 'maturation') {
       restartStreak = isRestartWarm ? restartStreak + 1 : 0;
-      if (avgTemp >= 45 || hotStreak >= 2) {
+      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
         phase = 'thermophilic';
         coolStreak = 0;
         stableLowStreak = 0;
@@ -1051,7 +1051,6 @@ function renderHeatmap(containerId, kind, compoundKey) {
 }
 
 let middleTempChart = null;
-let middleHumChart = null;
 
 function destroyIfExists(chart) {
   if (chart) chart.destroy();
@@ -1147,9 +1146,7 @@ function renderCorrelationBlock(compoundKey) {
   renderHeatmap('heatmap-hum', 'moisture', compoundKey);
 
   destroyIfExists(middleTempChart);
-  destroyIfExists(middleHumChart);
   middleTempChart = buildMiddleVsOutsideChart('chart-middle-temp', 'temperature', compoundKey);
-  middleHumChart = buildMiddleVsOutsideChart('chart-middle-hum', 'moisture', compoundKey);
 }
 
 function initAnalysisCharts() {
@@ -1177,20 +1174,3 @@ function initAnalysisCharts() {
     });
   });
 }
-
-// Ready for backend integration:
-// 1. Replace dashboardData with fetch('/api/dashboard') data.
-// 2. Keep the JSON keys: shelter, compounds, outdoor.
-// 3. Expected CSV shape from the uploaded sample:
-//    Device;Sensor;Type;Start;End;Interval;02/04;03/04;04/04;...
-// 4. Example source labels from the CSV:
-//    Katos -> Shelter
-//    Komposti 1 -> Compound 1
-//    Komposti 2 -> Compound 2
-//    Ulko -> Outdoor
-// 5. Example field labels from the CSV:
-//    Lampotila -> temperature
-//    Kosteus -> humidity
-//    Lammitys - w / kWh -> heating metrics
-// 6. For Data Analysis, replace analysisData with historical series
-//    (hourly / daily arrays per compound).

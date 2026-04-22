@@ -29,7 +29,7 @@
           <p class="eyebrow">Campus Composting</p>
           <h1>IoT Dashboard</h1>
           <p>
-            Monitoring Breeding Trials, Shelter, Compounds, and Outdoor data
+            Monitoring Shelter, Compounds, and Outdoor data
             in a unified interface designed to match the rest of the project.
           </p>
         </div>
@@ -42,17 +42,30 @@
         </div>
       </header>
 
-      <main class="dashboard-layout">
-        <section class="section">
-          <div class="section-header">
-            <div>
-              <h2>Breeding Trials</h2>
-              <p>Compact sensor grid with current readings.</p>
-            </div>
-          </div>
-          <div class="sensor-grid sensor-grid--compact" id="breeding-grid"></div>
-        </section>
+      <div class="tabs" role="tablist" aria-label="Dashboard views">
+        <button
+          type="button"
+          class="tab active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="tab-realtime"
+          data-tab="realtime"
+        >
+          Real-Time Data
+        </button>
+        <button
+          type="button"
+          class="tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="tab-analysis"
+          data-tab="analysis"
+        >
+          Data Analysis
+        </button>
+      </div>
 
+      <main class="dashboard-layout tab-panel active" id="tab-realtime" role="tabpanel">
         <section class="section">
           <div class="section-header">
             <div>
@@ -89,12 +102,76 @@
         </section>
       </main>
 
+      <main class="dashboard-layout tab-panel" id="tab-analysis" role="tabpanel" hidden>
+        <section class="section analysis-section">
+          <div class="analysis-header">
+            <div>
+              <h2>Data Analysis</h2>
+              <p id="analysis-subtitle">Showing data for Compound 1.</p>
+            </div>
+            <div class="analysis-controls">
+              <div class="date-range">
+                <label class="date-field">
+                  <span class="date-label">From</span>
+                  <select id="range-from" class="date-select" aria-label="From month"></select>
+                </label>
+                <label class="date-field">
+                  <span class="date-label">To</span>
+                  <select id="range-to" class="date-select" aria-label="To month"></select>
+                </label>
+              </div>
+              <div class="compound-toggle" role="tablist" aria-label="Select compound">
+                <button
+                  type="button"
+                  class="compound-btn active"
+                  role="tab"
+                  aria-selected="true"
+                  data-compound="compound1"
+                >
+                  Compound 1
+                </button>
+                <button
+                  type="button"
+                  class="compound-btn"
+                  role="tab"
+                  aria-selected="false"
+                  data-compound="compound2"
+                >
+                  Compound 2
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <article class="chart-card chart-card--full">
+            <header class="chart-head">
+              <h3>Temperature · Humidity · Heating · Outside</h3>
+              <span class="chart-sub">Monthly · May '25 → Apr '26 · per zone · 3 axes</span>
+            </header>
+
+            <div class="phase-legend" id="phase-legend" aria-label="Composting phases"></div>
+
+            <div class="chart-wrap chart-wrap--tall">
+              <canvas id="chart-combined"></canvas>
+            </div>
+            <div class="chart-legend-note">
+              <span><i class="dot red"></i>Temperature zones (°C · left)</span>
+              <span><i class="dot cyan"></i>Outside temperature (°C · left)</span>
+              <span><i class="dot blue"></i>Humidity zones (% · right)</span>
+              <span><i class="dot amber"></i>Heating (kWh · right)</span>
+              <span class="legend-note-sub">Line style: <b>solid</b>=Top · <b>dashed</b>=Middle · <b>dotted</b>=Bottom · Tip: click a legend item to hide/show — selection persists across date changes.</span>
+            </div>
+          </article>
+        </section>
+      </main>
+
       <footer class="footer">
         <p>© 2026 Campus Composting Project • R54D25S<br />Exhibition: April 23, 2026</p>
       </footer>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="../js/dashboard.js"></script>
 </body>
 </html>

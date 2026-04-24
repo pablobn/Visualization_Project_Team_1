@@ -28,17 +28,7 @@
         <div class="title-wrap">
           <p class="eyebrow">Campus Composting</p>
           <h1>IoT Dashboard</h1>
-          <p>
-            Monitoring Shelter, Compounds, and Outdoor data
-            in a unified interface designed to match the rest of the project.
-          </p>
-        </div>
-
-        <div class="chips" aria-label="Dashboard features">
-          <span class="chip">Simple</span>
-          <span class="chip">Responsive</span>
-          <span class="chip">Dark UI</span>
-          <span class="chip">Color status</span>
+          <p>Live monitoring and analysis of the composting system.</p>
         </div>
       </header>
 
@@ -70,7 +60,6 @@
           <div class="section-header">
             <div>
               <h2>Shelter</h2>
-              <p>Current canopy readings.</p>
             </div>
           </div>
           <div class="simple-grid" id="shelter-grid"></div>
@@ -80,7 +69,6 @@
           <div class="section-header">
             <div>
               <h2>Compounds</h2>
-              <p>Simplified compost bin view by vertical zone.</p>
             </div>
           </div>
           <div class="two-col" id="compounds-grid"></div>
@@ -95,7 +83,6 @@
           <div class="section-header">
             <div>
               <h2>Outdoor</h2>
-              <p>External environmental conditions.</p>
             </div>
           </div>
           <div class="simple-grid" id="outdoor-grid"></div>
@@ -107,7 +94,6 @@
           <div class="analysis-header">
             <div>
               <h2>Data Analysis</h2>
-              <p id="analysis-subtitle">Showing data for Compound 1.</p>
             </div>
             <div class="analysis-controls">
               <div class="range-picker" aria-label="Date picker">
@@ -188,7 +174,6 @@
           <article class="chart-card chart-card--full">
             <header class="chart-head">
               <h3>Temperature · Humidity · Heating · Outside</h3>
-              <span class="chart-sub">Daily · per zone · 3 axes · filtered by date range</span>
             </header>
 
             <div class="phase-legend" id="phase-legend" aria-label="Composting phases"></div>
@@ -201,7 +186,6 @@
               <span><i class="dot cyan"></i>Outside temperature (°C · left)</span>
               <span><i class="dot blue"></i>Humidity zones (% · right)</span>
               <span><i class="dot amber"></i>Heating (kWh · right)</span>
-              <span class="legend-note-sub">Line style: <b>solid</b>=Top · <b>dashed</b>=Middle · <b>dotted</b>=Bottom · Tip: click a legend item to hide/show — selection persists across date changes.</span>
             </div>
 
             <div class="phase-guide" aria-label="Composting phase guide">
@@ -210,8 +194,8 @@
                   <span class="phase-dot"></span>
                   <h4>Mesophilic</h4>
                 </div>
-                <p><b>What it is for:</b> The compost starts to activate and the first microorganisms break down easy organic matter.</p>
-                <p><b>What is needed:</b> Fresh material, oxygen, balanced moisture, and temperatures that begin to rise into the 20–40 °C range.</p>
+                <p><b>Typical temperature:</b> 20-40 °C</p>
+                <p><b>Typical duration:</b> 1-3 days</p>
               </article>
 
               <article class="phase-guide-card phase-thermophilic">
@@ -219,8 +203,8 @@
                   <span class="phase-dot"></span>
                   <h4>Thermophilic</h4>
                 </div>
-                <p><b>What it is for:</b> Fast decomposition of complex material and strong pathogen reduction at peak biological activity.</p>
-                <p><b>What is needed:</b> Enough microbial activity, a nitrogen-carbon mix that fuels heating, oxygen, and sustained temperatures above 40 °C.</p>
+                <p><b>Typical temperature:</b> 40-70 °C</p>
+                <p><b>Typical duration:</b> 3-14 days</p>
               </article>
 
               <article class="phase-guide-card phase-cooling">
@@ -228,8 +212,8 @@
                   <span class="phase-dot"></span>
                   <h4>Cooling</h4>
                 </div>
-                <p><b>What it is for:</b> The intense heat begins to drop while remaining material keeps decomposing more slowly.</p>
-                <p><b>What is needed:</b> The thermophilic peak must have already happened, then temperature gradually falls as easily degradable matter is consumed.</p>
+                <p><b>Typical temperature:</b> 25-40 °C</p>
+                <p><b>Typical duration:</b> 2-6 weeks</p>
               </article>
 
               <article class="phase-guide-card phase-maturation">
@@ -237,46 +221,81 @@
                   <span class="phase-dot"></span>
                   <h4>Maturation</h4>
                 </div>
-                <p><b>What it is for:</b> Final stabilization, humus formation, and production of safer, more mature compost.</p>
-                <p><b>What is needed:</b> Stable lower temperatures, enough time, moderate moisture, and continued aeration without re-heating the pile.</p>
+                <p><b>Typical temperature:</b> 15-25 °C</p>
+                <p><b>Typical duration:</b> 1-3 months</p>
               </article>
             </div>
           </article>
 
-          <div class="correlation-grid">
-            <article class="chart-card">
-              <header class="chart-head">
-                <h3>Temperature · Layers vs Outside</h3>
-                <span class="chart-sub">Pearson · updates with selected date range</span>
-              </header>
-              <div class="heatmap-wrap" id="heatmap-temp"></div>
-            </article>
-
-            <article class="chart-card">
-              <header class="chart-head">
-                <h3>Moisture · Layers vs Outside</h3>
-                <span class="chart-sub">Pearson · updates with selected date range</span>
-              </header>
-              <div class="heatmap-wrap" id="heatmap-hum"></div>
-            </article>
-
-            <article class="chart-card">
-              <header class="chart-head">
-                <h3>Middle Layer · Temperature vs Outside</h3>
-                <span class="chart-sub">Daily · per selected range</span>
-              </header>
-              <div class="chart-wrap chart-wrap--mid">
-                <canvas id="chart-middle-temp"></canvas>
+          <section class="correlation-section" aria-labelledby="correlation-section-title">
+            <header class="correlation-section-header">
+              <div>
+                <p class="eyebrow">Correlation</p>
+                <h2 id="correlation-section-title">Layers vs Outside</h2>
               </div>
-            </article>
-          </div>
+              <p class="correlation-summary">Quick view of how each compost layer follows outdoor conditions over the selected dates.</p>
+            </header>
 
-          <div class="corr-scale" aria-label="Correlation color scale">
-            <span class="corr-scale-label">−1</span>
-            <span class="corr-scale-bar"></span>
-            <span class="corr-scale-label">0</span>
-            <span class="corr-scale-label corr-scale-label--right">+1</span>
-          </div>
+            <div class="correlation-grid">
+              <article class="chart-card">
+                <header class="chart-head">
+                  <h3>Temperature · Layers vs Outside</h3>
+                </header>
+                <div class="heatmap-wrap" id="heatmap-temp"></div>
+              </article>
+
+              <article class="chart-card">
+                <header class="chart-head">
+                  <h3>Moisture · Layers vs Outside</h3>
+                </header>
+                <div class="heatmap-wrap" id="heatmap-hum"></div>
+              </article>
+            </div>
+
+            <div class="corr-scale" aria-label="Correlation color scale">
+              <span class="corr-scale-label">−1</span>
+              <span class="corr-scale-bar"></span>
+              <span class="corr-scale-label">0</span>
+              <span class="corr-scale-label corr-scale-label--right">+1</span>
+            </div>
+          </section>
+
+          <!-- GI (Germination Index) reference — variables that read compost
+               maturity better than our own physical sensors. -->
+          <section class="gi-section" aria-labelledby="gi-section-title">
+            <header class="gi-header">
+              <div>
+                <p class="eyebrow">Reference</p>
+                <h2 id="gi-section-title">Variables that read compost maturity better</h2>
+                <p class="gi-intro">
+                  External dataset (<span id="gi-sample-count">—</span> samples) showing
+                  how <b>pH</b>, <b>temperature</b>, <b>moisture</b> and <b>C/N ratio</b>
+                  evolve alongside <b>GI (Germination Index)</b>. GI above <b>80 %</b>
+                  means mature, phytotoxin-free compost. Pure reference — no overlay of
+                  our own data.
+                </p>
+              </div>
+            </header>
+
+            <div class="gi-grid">
+              <article class="chart-card">
+                <header class="chart-head"><h3>pH vs GI</h3></header>
+                <div class="chart-wrap chart-wrap--mid"><canvas id="gi-chart-ph"></canvas></div>
+              </article>
+              <article class="chart-card">
+                <header class="chart-head"><h3>Temperature vs GI</h3></header>
+                <div class="chart-wrap chart-wrap--mid"><canvas id="gi-chart-temp"></canvas></div>
+              </article>
+              <article class="chart-card">
+                <header class="chart-head"><h3>Moisture vs GI</h3></header>
+                <div class="chart-wrap chart-wrap--mid"><canvas id="gi-chart-moisture"></canvas></div>
+              </article>
+              <article class="chart-card">
+                <header class="chart-head"><h3>C/N ratio vs GI</h3></header>
+                <div class="chart-wrap chart-wrap--mid"><canvas id="gi-chart-cn"></canvas></div>
+              </article>
+            </div>
+          </section>
         </section>
       </main>
 

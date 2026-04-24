@@ -16,7 +16,9 @@ const dashboardData = APP_DATA.realtime;
 
 /* ==========================================================================
    Composting phases (Mesofílica · Termofílica · Enfriamiento · Maduración)
-   Detected from the middle-zone temperature (compost core) and its trend.
+   Detected from the middle-zone temperature (compost core) as short cycle
+   stages: a brief mesophilic warm-up, a thermophilic peak, then cooling and
+   maturation. This keeps mesophilic from stretching across long warm periods.
    ========================================================================== */
 const PHASES = {
   mesophilic: {
@@ -88,76 +90,124 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function buildPhaseSeries(temps) {
-  const series = [];
+function buildRollingAverages(temps) {
   const recentTemps = [];
-  let phase = 'mesophilic';
-  let lastPhase = phase;
-  let hotStreak = 0;
-  let coolStreak = 0;
-  let stableLowStreak = 0;
-  let restartStreak = 0;
+
+  return temps.map((temp) => {
+    if (temp == null) return null;
+
+    recentTemps.push(temp);
+    if (recentTemps.length > 3) recentTemps.shift();
+    return average(recentTemps);
+  });
+}
+
+function findThermophilicRuns(temps, rollingAverages) {
+  const runs = [];
+  let currentRun = null;
 
   for (let i = 0; i < temps.length; i++) {
-    const temp = normalizePhaseTemp(temps[i]);
+    const temp = temps[i];
+    const avgTemp = rollingAverages[i];
+    const isHot = temp != null && (temp >= 40 || avgTemp >= 40);
 
-    if (temp == null) {
-      series.push(lastPhase);
-      continue;
+    if (isHot) {
+      if (!currentRun) currentRun = { start: i, end: i };
+      else currentRun.end = i;
+    } else if (currentRun) {
+      runs.push(currentRun);
+      currentRun = null;
     }
+  }
+
+  if (currentRun) runs.push(currentRun);
+  return runs;
+}
+
+function collectMesophilicWindow(temps, rollingAverages, runStart, lowerBound) {
+  const window = [];
+
+  for (let i = runStart - 1; i >= lowerBound && window.length < 3; i--) {
+    const temp = temps[i];
+    const avgTemp = rollingAverages[i];
+    const isWarm = temp != null && (temp >= 20 || avgTemp >= 20);
+
+    if (!isWarm) break;
+    window.push(i);
+  }
+
+  return window.reverse();
+}
+
+function findMaturationStart(temps, start, end) {
+  const recentTemps = [];
+  let stableLowStreak = 0;
+
+  for (let i = start; i <= end; i++) {
+    const temp = temps[i];
+    if (temp == null) continue;
 
     recentTemps.push(temp);
     if (recentTemps.length > 3) recentTemps.shift();
 
     const avgTemp = average(recentTemps);
-    const isHot = temp >= 40 || avgTemp >= 40;
-    const isCoolingBand = avgTemp < 40;
-    const isStableLow = avgTemp <= 25;
-    const isRestartWarm = avgTemp >= 32;
+    const isStableLow = avgTemp != null && avgTemp <= 25;
 
-    hotStreak = isHot ? hotStreak + 1 : 0;
+    stableLowStreak = isStableLow ? stableLowStreak + 1 : 0;
+    if (stableLowStreak >= 3) return i;
+  }
 
-    if (phase === 'mesophilic') {
-      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
-        phase = 'thermophilic';
-        coolStreak = 0;
-        stableLowStreak = 0;
-        restartStreak = 0;
-      }
-    } else if (phase === 'thermophilic') {
-      coolStreak = isCoolingBand ? coolStreak + 1 : 0;
-      if (coolStreak >= 2) {
-        phase = 'cooling';
-        stableLowStreak = 0;
-      }
-    } else if (phase === 'cooling') {
-      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
-        phase = 'thermophilic';
-        coolStreak = 0;
-        stableLowStreak = 0;
-      } else {
-        stableLowStreak = isStableLow ? stableLowStreak + 1 : 0;
-        if (stableLowStreak >= 3) {
-          phase = 'maturation';
-          restartStreak = 0;
-        }
-      }
-    } else if (phase === 'maturation') {
-      restartStreak = isRestartWarm ? restartStreak + 1 : 0;
-      if (temp >= 40 || avgTemp >= 40 || hotStreak >= 2) {
-        phase = 'thermophilic';
-        coolStreak = 0;
-        stableLowStreak = 0;
-        restartStreak = 0;
-      } else if (restartStreak >= 3) {
-        phase = 'mesophilic';
-        coolStreak = 0;
-        stableLowStreak = 0;
-      }
+  return null;
+}
+
+function buildPhaseSeries(temps) {
+  const normalizedTemps = temps.map(normalizePhaseTemp);
+  const rollingAverages = buildRollingAverages(normalizedTemps);
+  const thermophilicRuns = findThermophilicRuns(normalizedTemps, rollingAverages);
+  const mesophilicWindows = thermophilicRuns.map((run, idx) => {
+    const prevRun = idx > 0 ? thermophilicRuns[idx - 1] : null;
+    const lowerBound = prevRun ? prevRun.end + 1 : 0;
+    return collectMesophilicWindow(normalizedTemps, rollingAverages, run.start, lowerBound);
+  });
+  const series = new Array(temps.length).fill(null);
+
+  thermophilicRuns.forEach((run, idx) => {
+    for (let i = run.start; i <= run.end; i++) {
+      series[i] = 'thermophilic';
     }
 
-    lastPhase = phase;
-    series.push(phase);
+    mesophilicWindows[idx].forEach((i) => {
+      series[i] = 'mesophilic';
+    });
+  });
+
+  thermophilicRuns.forEach((run, idx) => {
+    const nextRun = thermophilicRuns[idx + 1];
+    const nextMesophilicWindow = nextRun ? mesophilicWindows[idx + 1] : [];
+    const gapStart = run.end + 1;
+    const gapEnd = nextMesophilicWindow.length
+      ? nextMesophilicWindow[0] - 1
+      : (nextRun ? nextRun.start - 1 : normalizedTemps.length - 1);
+
+    if (gapStart > gapEnd) return;
+
+    const maturationStart = findMaturationStart(normalizedTemps, gapStart, gapEnd);
+
+    for (let i = gapStart; i <= gapEnd; i++) {
+      if (normalizedTemps[i] == null) {
+        series[i] = i > 0 ? series[i - 1] : null;
+      } else if (maturationStart != null && i >= maturationStart) {
+        series[i] = 'maturation';
+      } else {
+        series[i] = 'cooling';
+      }
+    }
+  });
+
+  for (let i = 1; i < series.length; i++) {
+    if (normalizedTemps[i] == null && series[i] == null) {
+      series[i] = series[i - 1];
+    }
   }
 
   return series;
@@ -1050,103 +1100,9 @@ function renderHeatmap(containerId, kind, compoundKey) {
   root.innerHTML = buildHeatmapTable(labels, matrix);
 }
 
-let middleTempChart = null;
-
-function destroyIfExists(chart) {
-  if (chart) chart.destroy();
-}
-
-function middleVsOutsideOptions(titleY) {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-      legend: {
-        labels: { color: chartColors.text, usePointStyle: true, boxWidth: 8 }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(16, 27, 52, 0.95)',
-        borderColor: 'rgba(255,255,255,0.12)',
-        borderWidth: 1,
-        titleColor: '#f8fbff',
-        bodyColor: '#e5eefc'
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: chartColors.grid, drawTicks: false },
-        ticks: {
-          color: chartColors.text,
-          autoSkip: true,
-          maxTicksLimit: 10,
-          maxRotation: 0,
-          callback: formatDayTick
-        }
-      },
-      y: {
-        title: { display: true, text: titleY, color: chartColors.text },
-        grid: { color: chartColors.grid, drawTicks: false },
-        ticks: { color: chartColors.text }
-      }
-    }
-  };
-}
-
-function buildMiddleVsOutsideChart(canvasId, kind, compoundKey) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-
-  const labels = sliceRange(analysisData.labels);
-
-  const isTemp = kind === 'temperature';
-  const compoundSeries = analysisData[compoundKey][isTemp ? 'temperature' : 'humidity'].middle;
-  const outsideSeries = analysisData.outdoor[isTemp ? 'temperature' : 'humidity'];
-
-  const compoundLabel = `${compoundAccent[compoundKey].name} · Middle ${isTemp ? 'Temp' : 'Humidity'}`;
-  const outsideLabel = `Outside · ${isTemp ? 'Temperature' : 'Humidity'}`;
-
-  const unit = isTemp ? '°C' : '%';
-
-  const datasets = [
-    {
-      label: compoundLabel,
-      data: sliceRange(compoundSeries),
-      borderColor: isTemp ? chartColors.red : chartColors.blue,
-      backgroundColor: isTemp ? chartColors.redFill : chartColors.blueFill,
-      tension: 0.3,
-      fill: false,
-      pointRadius: adaptivePointRadius(),
-      pointHoverRadius: 5,
-      borderWidth: 2
-    },
-    {
-      label: outsideLabel,
-      data: sliceRange(outsideSeries),
-      borderColor: '#6dd3ff',
-      backgroundColor: 'rgba(109, 211, 255, 0.18)',
-      tension: 0.3,
-      fill: false,
-      pointRadius: adaptivePointRadius(),
-      pointHoverRadius: 5,
-      borderWidth: 2,
-      borderDash: [6, 4]
-    }
-  ];
-
-  return new Chart(canvas, {
-    type: 'line',
-    data: { labels, datasets },
-    options: middleVsOutsideOptions(`${isTemp ? 'Temperature' : 'Moisture'} (${unit})`)
-  });
-}
-
 function renderCorrelationBlock(compoundKey) {
   renderHeatmap('heatmap-temp', 'temperature', compoundKey);
   renderHeatmap('heatmap-hum', 'moisture', compoundKey);
-
-  destroyIfExists(middleTempChart);
-  middleTempChart = buildMiddleVsOutsideChart('chart-middle-temp', 'temperature', compoundKey);
 }
 
 function initAnalysisCharts() {
@@ -1173,4 +1129,181 @@ function initAnalysisCharts() {
       renderAllCharts(currentCompound);
     });
   });
+
+  initGiBenchmark();
 }
+
+/* ==========================================================================
+   GI (Germination Index) reference panels
+   Pure reference reproduction of the 2x2 notebook figure:
+   pH / Temperature / Moisture / C/N ratio, each with GI overlaid on a second
+   axis and a red dotted line at the 80 % maturity threshold.
+   ========================================================================== */
+const GI_DATA = APP_DATA.gi || null;
+
+// Colour per panel (kept in sync with the notebook styling)
+const GI_PANELS = [
+  { id: 'ph',       canvas: 'gi-chart-ph',       label: 'pH',                   color: '#4b8bff', unit: '',   refKey: 'pH'       },
+  { id: 'temp',     canvas: 'gi-chart-temp',     label: 'Temperature (°C)',     color: '#ff7a59', unit: '°C', refKey: 'temp'     },
+  { id: 'moisture', canvas: 'gi-chart-moisture', label: 'Moisture content (%)', color: '#7b6cff', unit: '%',  refKey: 'moisture' },
+  { id: 'cn',       canvas: 'gi-chart-cn',       label: 'C/N ratio',            color: '#c88640', unit: '',   refKey: 'cn'       }
+];
+
+const GI_MATURITY = 80; // GI % threshold for "mature, phytotoxin-free" compost
+const giCharts = {};
+
+function initGiBenchmark() {
+  if (!GI_DATA || !GI_DATA.reference || !GI_DATA.reference.available) {
+    const wrapper = document.querySelector('.gi-section');
+    if (wrapper) {
+      wrapper.innerHTML =
+        '<p class="gi-intro">GI reference data is not available. ' +
+        'Run <code>python3 python/build_data.py</code> with the reference CSV in place.</p>';
+    }
+    return;
+  }
+
+  const countEl = document.getElementById('gi-sample-count');
+  if (countEl && GI_DATA.reference.sampleCount) {
+    countEl.textContent = GI_DATA.reference.sampleCount.toLocaleString();
+  }
+
+  GI_PANELS.forEach((panel) => buildGiChart(panel));
+}
+
+function buildGiChart(panel) {
+  const ctx = document.getElementById(panel.canvas);
+  if (!ctx) return;
+
+  const stages = GI_DATA.stages || GI_DATA.reference.stages;
+  const refSeries = GI_DATA.reference.series[panel.refKey];
+  const giSeries  = GI_DATA.reference.series.gi;
+
+  const datasets = [
+    {
+      label: panel.label,
+      data: refSeries,
+      borderColor: panel.color,
+      backgroundColor: hexToRgba(panel.color, 0.15),
+      borderWidth: 2.5,
+      tension: 0.25,
+      pointRadius: 4,
+      pointHoverRadius: 5,
+      yAxisID: 'y'
+    },
+    {
+      label: 'GI (%)',
+      data: giSeries,
+      borderColor: '#1dbf73',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [6, 4],
+      tension: 0.25,
+      pointRadius: 3.5,
+      pointStyle: 'rectRot',
+      pointHoverRadius: 5,
+      yAxisID: 'yGi'
+    }
+  ];
+
+  giCharts[panel.id] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: stages, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#d1d5db',
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 10,
+            font: { size: 11 }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(11, 19, 38, 0.94)',
+          borderColor: 'rgba(255,255,255,0.08)',
+          borderWidth: 1,
+          padding: 10,
+          titleColor: '#fff',
+          bodyColor: '#d1d5db',
+          callbacks: {
+            label(ctx2) {
+              const val = ctx2.parsed.y;
+              if (val == null) return `${ctx2.dataset.label}: —`;
+              const unit = ctx2.dataset.yAxisID === 'yGi' ? '%' : (panel.unit || '');
+              return `${ctx2.dataset.label}: ${val.toFixed(2)}${unit ? ' ' + unit : ''}`;
+            }
+          }
+        },
+        // Draw the 80 % maturity line using a lightweight plugin.
+        gi80Line: { threshold: GI_MATURITY }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9ca3af', font: { size: 11 } },
+          grid:  { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'Compost time (days)', color: '#9ca3af', font: { size: 11 } }
+        },
+        y: {
+          position: 'left',
+          ticks: { color: panel.color, font: { size: 11 } },
+          grid:  { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: panel.label, color: panel.color, font: { size: 11 } }
+        },
+        yGi: {
+          position: 'right',
+          min: 0,
+          max: 110,
+          ticks: { color: '#1dbf73', font: { size: 11 }, callback: (v) => `${v}%` },
+          grid:  { drawOnChartArea: false },
+          title: { display: true, text: 'GI (%)', color: '#1dbf73', font: { size: 11 } }
+        }
+      }
+    },
+    plugins: [gi80LinePlugin]
+  });
+}
+
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Chart.js plugin that draws the 80 % GI maturity line on the right axis.
+const gi80LinePlugin = {
+  id: 'gi80Line',
+  afterDraw(chart, _args, opts) {
+    const threshold = (opts && opts.threshold) || 80;
+    const scale = chart.scales.yGi;
+    if (!scale) return;
+    const y = scale.getPixelForValue(threshold);
+    const { left, right } = chart.chartArea;
+    const ctx = chart.ctx;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 107, 107, 0.85)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255, 107, 107, 0.9)';
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`GI ${threshold}% · maturity`, right - 6, y - 3);
+    ctx.restore();
+  }
+};

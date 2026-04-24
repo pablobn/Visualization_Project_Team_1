@@ -38,7 +38,16 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parent
 CSV_PATH = HERE / "data" / "combined_compost_measurements.csv"
+GI_CSV_PATH = HERE / "data" / "reference" / "cleaned_compost_data_2.csv"
 OUT_PATH = PROJECT / "js" / "data.js"
+
+
+# --------------------------------------------------------------------------
+# GI (Germination Index) reference dataset
+# --------------------------------------------------------------------------
+# Stage bins used by compost_data2_analysis.ipynb (days).
+GI_STAGE_BINS   = [0, 7, 14, 21, 30, 60, 185]
+GI_STAGE_LABELS = ['0–7', '8–14', '15–21', '22–30', '31–60', '61+']
 
 
 # --------------------------------------------------------------------------
@@ -106,6 +115,75 @@ def prev_month_mean(df: pd.DataFrame, col: str):
     if window.empty:
         return None
     return round(float(window.mean()), 2)
+
+
+# --------------------------------------------------------------------------
+# GI reference + our-project stage aggregation
+# --------------------------------------------------------------------------
+def _round(value, decimals: int = 2):
+    if value is None:
+        return None
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(f):
+        return None
+    return round(f, decimals)
+
+
+def build_gi_reference() -> dict:
+    """Reproduce the stage-grouped means from compost_data2_analysis.ipynb.
+
+    Mirrors the notebook exactly:
+      1. Drop rows where GI (%) is NaN.
+      2. Keep only the analysis columns and drop any row with a NaN.
+      3. Bin by compost day (0–7, 8–14, …, 61+).
+      4. Compute mean of each column per bin.
+    """
+    if not GI_CSV_PATH.exists():
+        # Reference is optional — fail soft so the dashboard still builds.
+        return {"available": False}
+
+    df = pd.read_csv(GI_CSV_PATH)
+    df.columns = [c.strip() for c in df.columns]
+    df = df.dropna(subset=["GI (%)"]).reset_index(drop=True)
+
+    cols = [
+        "Compost time (day)",
+        "pH",
+        "Temperature (℃)",
+        "Moisture content (%)",
+        "GI (%)",
+        "C/N",
+    ]
+    sub = df[cols].dropna().copy()
+
+    sub["stage"] = pd.cut(
+        sub["Compost time (day)"],
+        bins=GI_STAGE_BINS,
+        labels=GI_STAGE_LABELS,
+        include_lowest=True,
+    )
+    grouped = sub.groupby("stage", observed=True).mean(numeric_only=True).round(2)
+
+    def col_list(col):
+        return [_round(grouped[col].get(lbl)) for lbl in GI_STAGE_LABELS]
+
+    return {
+        "available": True,
+        "stages": list(GI_STAGE_LABELS),
+        "sampleCount": int(len(sub)),
+        "series": {
+            "pH":       col_list("pH"),
+            "temp":     col_list("Temperature (℃)"),
+            "moisture": col_list("Moisture content (%)"),
+            "cn":       col_list("C/N"),
+            "gi":       col_list("GI (%)"),
+        },
+    }
+
+
 
 
 # --------------------------------------------------------------------------
@@ -197,7 +275,20 @@ def build() -> dict:
         "to": labels[-1],
     }
 
-    return {"meta": meta, "realtime": realtime, "analysis": analysis}
+    # --- GI (Germination Index) external reference (pure reference — no
+    #     overlay with our project is shown in the dashboard). ---
+    gi_reference = build_gi_reference()
+    gi_block = {
+        "stages": list(GI_STAGE_LABELS),
+        "reference": gi_reference,
+    }
+
+    return {
+        "meta": meta,
+        "realtime": realtime,
+        "analysis": analysis,
+        "gi": gi_block,
+    }
 
 
 def write(payload: dict) -> None:

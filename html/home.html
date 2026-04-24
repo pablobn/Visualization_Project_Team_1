@@ -29,8 +29,8 @@
           <p class="eyebrow">Project R54D25S</p>
           <h1>Campus Composting <span>Monitoring</span></h1>
           <p>
-            A visualization platform for tracking composting, shelter, and
-            outdoor sensors across the campus.
+            A website that visualizes campus composting data, combines it with
+            open environmental data, and explains the main patterns behind the process.
           </p>
           <div class="hero-actions">
             <a href="dashboard.html" class="button">Open dashboard</a>
@@ -47,68 +47,98 @@
         </article>
       </section>
 
-      <section class="section">
-        <div class="section-header">
-          <div>
-            <h2>Overview</h2>
-            <p>Unified environmental and compost monitoring system.</p>
-          </div>
-        </div>
+      <!-- How it works -->
+      <section class="info-grid">
+        <article class="info-panel">
+          <h3>How the compost device works</h3>
+          <p>
+            Sensors inside the compost bins measure temperature and humidity.
+            The data is collected over time and sent to the system.
+          </p>
+          <p>
+            This allows us to track compost activity and observe how conditions
+            change during the process.
+          </p>
+        </article>
 
-        <div class="stat-grid">
-          <div class="stat">
-            <span class="label">Monitored areas</span>
-            <div class="value">4</div>
-          </div>
-          <div class="stat">
-            <span class="label">Compound bins</span>
-            <div class="value">2</div>
-          </div>
-          <div class="stat">
-            <span class="label">Exhibition</span>
-            <div class="value">23 Apr</div>
-          </div>
-        </div>
+        <article class="info-panel">
+          <h3>Why it matters</h3>
+          <p>
+            Monitoring helps ensure the compost process is working properly
+            and improves understanding of compost development.
+          </p>
+        </article>
       </section>
 
+      <!-- Info -->
       <section class="info-grid">
         <article class="info-panel">
           <h3>About the project</h3>
           <p>
-            This project connects multiple sensors distributed across the campus
-            to measure temperature, humidity, and composting process conditions.
-            The interface is designed to compare zones, detect fast changes,
-            and communicate results clearly.
+            This project studies compost using temperature and humidity data.
+            It helps track changes and understand compost behavior.
           </p>
         </article>
 
         <article class="info-panel">
-          <h3>What you can see</h3>
+          <h3>What the website shows</h3>
           <p>
-            The dashboard shows current Shelter and Outdoor readings, plus a
-            visual compost bin view split into Top, Middle, and Bottom zones.
+            The dashboard displays outdoor, shelter, and compost layer data
+            for easy comparison.
           </p>
         </article>
       </section>
 
-      <section class="feature-grid">
-        <article class="feature-card">
-          <div class="feature-icon">🌡️</div>
-          <h3>Temperature</h3>
-          <p>Thermal monitoring across compost bins, canopy sensors, and distributed campus devices.</p>
+      <section class="section compost-section">
+        <div class="section-header">
+          <div>
+            <h2>Composting phases</h2>
+            <p>How composting works and how the material moves through its main stages.</p>
+          </div>
+        </div>
+
+        <article class="compost-intro">
+          <h3>How composting works</h3>
+          <p>
+            Composting happens when microorganisms break down organic material.
+            As they work, temperature and moisture change, which helps show
+            whether the compost is active, cooling down, or becoming more stable.
+          </p>
         </article>
 
-        <article class="feature-card">
-          <div class="feature-icon">💧</div>
-          <h3>Humidity</h3>
-          <p>Humidity readings to evaluate environmental stability and compost behavior over time.</p>
-        </article>
+        <div class="phase-flow">
+          <article class="phase-step phase-step--mesophilic">
+            <div class="phase-step__head">
+              <span class="phase-step__index">1</span>
+              <span class="phase-step__title">Mesophilic</span>
+            </div>
+            <p>The process starts at moderate temperatures while microorganisms begin decomposing the easiest organic material.</p>
+          </article>
 
-        <article class="feature-card">
-          <div class="feature-icon">📡</div>
-          <h3>Sensor network</h3>
-          <p>Modular structure ready to integrate real backend data in a later step.</p>
-        </article>
+          <article class="phase-step phase-step--thermophilic">
+            <div class="phase-step__head">
+              <span class="phase-step__index">2</span>
+              <span class="phase-step__title">Thermophilic</span>
+            </div>
+            <p>Temperature rises and decomposition becomes more intense, showing the highest biological activity inside the compost.</p>
+          </article>
+
+          <article class="phase-step phase-step--cooling">
+            <div class="phase-step__head">
+              <span class="phase-step__index">3</span>
+              <span class="phase-step__title">Cooling</span>
+            </div>
+            <p>After the peak, the pile gradually loses heat as the most easily degradable material becomes less available.</p>
+          </article>
+
+          <article class="phase-step phase-step--maturation">
+            <div class="phase-step__head">
+              <span class="phase-step__index">4</span>
+              <span class="phase-step__title">Maturation</span>
+            </div>
+            <p>The compost stabilizes and becomes more uniform, moving closer to a mature state that is safer to use.</p>
+          </article>
+        </div>
       </section>
 
       <footer class="footer">
